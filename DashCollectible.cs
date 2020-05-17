@@ -11,7 +11,7 @@ public class DashCollectible : MonoBehaviour
 
         if (controller != null) // Checks to see if you're not an Enemy
         {
-            controller.extraDashValue++; //Gives you +1 Dash
+            controller.extraDashValue++; //Gives you +1 Jump
             Destroy(gameObject); // Then Destroys itself
 
         }

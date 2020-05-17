@@ -1,12 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
 
     private Rigidbody2D rigidbody2d;
     private BoxCollider2D boxCollider2d;
+    private Renderer playerSprite;
+
+    public Canvas gameoverScreen;
+    public Button restart;
 
     public int maxHealth = 3;
     public int currentHealth;
@@ -23,30 +29,50 @@ public class PlayerController : MonoBehaviour
     private int direction;
     private int extraDash;
     public int extraDashValue;
+    public AudioSource dashSound;
+    public AudioClip[] dashSoundsCollection;
 
     private bool isGrounded;
     public Transform groundCheck;
     public float checkRadius;
     public LayerMask whatIsGround;
 
+    private bool isWalled;
+    public Transform wallCheck;
+    public float checkWallRadius;
+    public LayerMask whatIsWall;
+    private int extraWallJump;
+    public int extraWallJumpValue;
+
     private int extraJumps;
     public int extraJumpsValue;
+    public AudioSource jumpSound;
+    public AudioClip[] jumpSoundsCollection;
 
     void Start()
     {
 
         rigidbody2d = transform.GetComponent<Rigidbody2D>();
         boxCollider2d = transform.GetComponent<BoxCollider2D>();
+        playerSprite = GetComponent<Renderer>();
 
-        currentHealth = maxHealth;
+        gameoverScreen = gameoverScreen.GetComponent<Canvas>();
+        restart = restart.GetComponent<Button>();
+        gameoverScreen.enabled = false;
+
+        currentHealth = PlayerPrefs.GetInt("CurrentHealth");
         EmptyHeart1.gameObject.SetActive(false);
         EmptyHeart2.gameObject.SetActive(false);
         EmptyHeart3.gameObject.SetActive(false);
 
         extraJumps = extraJumpsValue;
+        extraWallJump = extraWallJumpValue;
+        jumpSound = GetComponent<AudioSource>();
 
         extraDash = extraDashValue;
         dashTime = startDashTime;
+        dashSound = GetComponent<AudioSource>();
+
 
     }
 
@@ -89,16 +115,10 @@ public class PlayerController : MonoBehaviour
                 Heart3.gameObject.SetActive(false);
                 EmptyHeart3.gameObject.SetActive(true);
                 break;
-
-                // Depending on the current value of the players health, the sprites will show up or hide themselves
         }
 
-        if (currentHealth == 0)
-        {
-            Destroy(gameObject); // If you die, the player disappears
-        }
-
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround); //Checking if player is grounded
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround);
+        isWalled = Physics2D.OverlapCircle(wallCheck.position, checkWallRadius, whatIsWall);
 
         Movement();
 
@@ -106,18 +126,17 @@ public class PlayerController : MonoBehaviour
         {
             if(Input.GetKeyDown(KeyCode.LeftShift) && extraDash > 0)
             {
-                extraDash--;
 
                 if(movingLeft < 0)
                 {
                     direction = 1;
+                    extraDash--;
                 }
                 else if (movingLeft > 0)
                 {
                     direction = 2;
+                    extraDash--;
                 }
-
-                // Depending on direction facing and if they have dash available, will move the player quickly in one direction
             }
         }
         else
@@ -127,7 +146,8 @@ public class PlayerController : MonoBehaviour
                 direction = 0;
                 dashTime = startDashTime;
                 rigidbody2d.velocity = Vector2.zero;
-                // Sets the dash timer
+                dashSound.clip = dashSoundsCollection[Random.Range(0, dashSoundsCollection.Length)];
+                dashSound.PlayOneShot(dashSound.clip);
             }
             else
             {
@@ -139,10 +159,8 @@ public class PlayerController : MonoBehaviour
                 }
                 else if (direction == 2)
                 {
-                    rigidbody2d.velocity = Vector2.right * dashSpeed;                  
+                    rigidbody2d.velocity = Vector2.right * dashSpeed;
                 }
-
-                //Code for moving the player in the direction facing
             }
         }
 
@@ -150,19 +168,29 @@ public class PlayerController : MonoBehaviour
         {
             extraJumps = extraJumpsValue;
             extraDash = extraDashValue;
-            // When grounded, returns the values to their original.
+            extraWallJump = extraWallJumpValue;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && extraJumps > 0)
+        if (Input.GetKeyDown(KeyCode.Space) && extraJumps > 0 | isWalled == true)
         {
-            rigidbody2d.velocity = Vector2.up * jumpVelocity;
-            extraJumps--;
+            jumpSound.clip = jumpSoundsCollection[Random.Range(0, jumpSoundsCollection.Length)];
+            jumpSound.PlayOneShot(jumpSound.clip);
+            if (isWalled == true && extraWallJump > 0)
+            {
+                rigidbody2d.velocity = Vector2.up * jumpVelocity;
+                extraWallJump--;
+            }
+            else if (isWalled == false | extraJumps > 0)
+            {
+                rigidbody2d.velocity = Vector2.up * jumpVelocity;
+                //jumpSound.Play();
+                extraJumps--;
+            }
         }
         else if(Input.GetKeyDown(KeyCode.Space) && extraJumps == 0 && isGrounded == true)
         {
             rigidbody2d.velocity = Vector2.up * jumpVelocity;
         }
-        // Checks for space input and makes sure you can jump again.
 
     }
 
@@ -192,10 +220,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void Restart()
+    {
+        SceneManager.LoadScene(0);
+    }
+
     public void ChangeHealth(int amount) //changes your health by an amount
     {
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth); //Does the math to calculate the Health
 
+        PlayerPrefs.SetInt("CurrentHealth", currentHealth);
         Debug.Log(currentHealth + "/" + maxHealth);
+
+        if (currentHealth == 0)
+        {
+            playerSprite.enabled = false;
+            Destroy(rigidbody2d);
+            boxCollider2d.enabled = false;
+            gameoverScreen.enabled = true;
+        }
+
     }
 }
