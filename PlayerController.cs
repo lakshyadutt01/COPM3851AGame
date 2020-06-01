@@ -10,14 +10,22 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rigidbody2d;
     private BoxCollider2D boxCollider2d;
     private Renderer playerSprite;
+    public Animator animator;
 
-    public Canvas gameoverScreen;
-    public Button restart;
+    //public Canvas gameoverScreen;
+    //public Button restart;
 
     public int maxHealth = 3;
     public int currentHealth;
     public int health {  get { return currentHealth; } }
     public GameObject Heart1, Heart2, Heart3, EmptyHeart1, EmptyHeart2, EmptyHeart3;
+    public AudioSource playerHit;
+    public AudioSource lowHealth;
+    private float timeBtwLowHealth;
+    public float startTimeBtwLowHealth;
+    public float timeInvincible;
+    private bool isInvincible;
+    private float invincibleTimer;
 
     public float jumpVelocity = 7f;
     public float moveSpeed = 10f;
@@ -56,9 +64,9 @@ public class PlayerController : MonoBehaviour
         boxCollider2d = transform.GetComponent<BoxCollider2D>();
         playerSprite = GetComponent<Renderer>();
 
-        gameoverScreen = gameoverScreen.GetComponent<Canvas>();
-        restart = restart.GetComponent<Button>();
-        gameoverScreen.enabled = false;
+        //gameoverScreen = gameoverScreen.GetComponent<Canvas>();
+        //restart = restart.GetComponent<Button>();
+        //gameoverScreen.enabled = false;
 
         currentHealth = PlayerPrefs.GetInt("CurrentHealth");
         EmptyHeart1.gameObject.SetActive(false);
@@ -122,7 +130,18 @@ public class PlayerController : MonoBehaviour
 
         Movement();
 
-        if(direction == 0)
+        if (isInvincible)
+        {
+            animator.SetBool("Invincible", true);
+            invincibleTimer -= Time.deltaTime;
+            if (invincibleTimer < 0)
+            {
+                animator.SetBool("Invincible", false);
+                isInvincible = false;
+            }
+        }
+
+        if (direction == 0)
         {
             if(Input.GetKeyDown(KeyCode.LeftShift) && extraDash > 0)
             {
@@ -192,6 +211,16 @@ public class PlayerController : MonoBehaviour
             rigidbody2d.velocity = Vector2.up * jumpVelocity;
         }
 
+        if (currentHealth == 1 && timeBtwLowHealth <= 0)
+        {
+            lowHealth.GetComponent<AudioSource>().Play();
+            timeBtwLowHealth = startTimeBtwLowHealth;
+        }
+        else
+        {
+            timeBtwLowHealth -= Time.deltaTime;
+        }
+
     }
 
    
@@ -220,25 +249,38 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void Restart()
-    {
-        SceneManager.LoadScene(0);
-    }
+    //public void Restart()
+    //{
+    //    Debug.Log("wow howq buggy lmao");
+    //    SceneManager.LoadScene(0);
+    //}
 
     public void ChangeHealth(int amount) //changes your health by an amount
     {
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth); //Does the math to calculate the Health
 
-        PlayerPrefs.SetInt("CurrentHealth", currentHealth);
-        Debug.Log(currentHealth + "/" + maxHealth);
-
-        if (currentHealth == 0)
+        if (amount < 0)
         {
-            playerSprite.enabled = false;
-            Destroy(rigidbody2d);
-            boxCollider2d.enabled = false;
-            gameoverScreen.enabled = true;
+            if (isInvincible) //checks if invincible, if so it returns
+                return;
+
+            isInvincible = true; //sets you to invincible
+            invincibleTimer = timeInvincible; //gives you the timer of invincible
         }
+
+            currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth); //Does the math to calculate the Health
+
+            PlayerPrefs.SetInt("CurrentHealth", currentHealth);
+            Debug.Log(currentHealth + "/" + maxHealth);
+            playerHit.GetComponent<AudioSource>().Play();
+
+            if (currentHealth == 0)
+            {
+                playerSprite.enabled = false;
+                Destroy(rigidbody2d);
+                boxCollider2d.enabled = false;
+                //gameoverScreen.enabled = true;
+            }
+        
 
     }
 }

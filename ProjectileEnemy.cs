@@ -12,10 +12,14 @@ public class ProjectileEnemy : MonoBehaviour
 
     private float distance;
     public float aggroRange;
+    public float stopShooting;
+    public AudioSource alertStart;
+    public AudioSource alertEnd;
 
     private Transform player;
     public GameObject projectile;
     public AudioSource projectileSound;
+    public Animator animator;
 
 
     void Start()
@@ -43,22 +47,30 @@ public class ProjectileEnemy : MonoBehaviour
         if (distance <= aggroRange)
         {
             Speed = 0;
+            animator.SetBool("IsAlert", true);
+            //alertStart.GetComponent<AudioSource>().Play();
 
-            if (timeBtwShots <= 0)
+            if (distance >= stopShooting)
             {
-                projectileSound.Play();
-                Instantiate(projectile, transform.position, Quaternion.identity);
-                timeBtwShots = startTimeBtwShots;
-            }
-            else
-            {
-                timeBtwShots -= Time.deltaTime;
+
+                if (timeBtwShots <= 0)
+                {
+                    projectileSound.Play();
+                    Instantiate(projectile, transform.position, Quaternion.identity);
+                    timeBtwShots = startTimeBtwShots;
+                }
+                else
+                {
+                    timeBtwShots -= Time.deltaTime;
+                }
             }
         }
 
         if(distance >= aggroRange)
         {
             Speed = 2;
+            alertEnd.GetComponent<AudioSource>().Play();
+            animator.SetBool("IsAlert", false);
         }
     }
 

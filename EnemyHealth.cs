@@ -7,11 +7,13 @@ public class EnemyHealth : MonoBehaviour
 
     public int health;
     public GameObject damageSound;
+    //public Animator animator;
 
     private void Update()
     {
         if (health <= 0)
         {
+            //animator.SetBool("IsDead", true);
             Destroy(gameObject);
         }
     }

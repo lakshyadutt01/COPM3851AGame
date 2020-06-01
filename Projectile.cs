@@ -39,6 +39,19 @@ public class Projectile : MonoBehaviour
             character.ChangeHealth(-damage);
             DestroyProjectile();
         }
+
+        if(other.gameObject.tag == "Tilemap")
+        {
+            DestroyProjectile();
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.name == "Ground")
+        {
+            DestroyProjectile();
+        }
     }
 
 

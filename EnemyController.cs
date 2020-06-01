@@ -5,21 +5,27 @@ using UnityEngine;
 public class EnemyController : MonoBehaviour
 {
     [SerializeField] float Speed;
-    //[SerializeField] Transform player;
-    //[SerializeField] float agroRange;
     Rigidbody2D rigidbody2d;
 
     public int enemyDamage;
 
+    private Transform player;
+    private float distance;
+    public float aggroRange;
+
+    public Animator animator;
+
     private void Start()
     {
         rigidbody2d = GetComponent<Rigidbody2D>();
+        player = GameObject.FindGameObjectWithTag("Player").transform;
     }
 
     void Update()
     {
+        distance = Vector3.Distance(player.position, transform.position);
 
-        if(IsFacingRight())
+        if (IsFacingRight())
         {
             rigidbody2d.velocity = new Vector2(Speed, 0f);
         }
@@ -27,6 +33,22 @@ public class EnemyController : MonoBehaviour
         {
             rigidbody2d.velocity = new Vector2(-Speed, 0f);
         }
+
+        if (distance <= aggroRange)
+        {
+            Speed = 0;
+            animator.SetBool("Defense", true);
+            //Vector2 direction = player.position - transform.position;
+            //float angle = Mathf.Atan(direction.x) * Mathf.Rad2Deg;
+            //rigidbody2d.rotation = angle;
+        }
+
+        if (distance >= aggroRange)
+        {
+            Speed = 2;
+            animator.SetBool("Defense", false);
+        }
+
     }
 
     private bool IsFacingRight()
@@ -46,7 +68,6 @@ public class EnemyController : MonoBehaviour
         if (player != null)
         {
             player.ChangeHealth(-enemyDamage);
-            Debug.Log("player damage TAKEN");
         }
     }
     
