@@ -16,6 +16,7 @@ public class ShieldSound : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        blockSound.Play();
+        blockSound.clip = blockSoundsCollection[Random.Range(0, blockSoundsCollection.Length)];
+        blockSound.PlayOneShot(blockSound.clip);
     }
 }

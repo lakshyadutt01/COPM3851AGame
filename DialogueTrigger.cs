@@ -6,20 +6,63 @@ public class DialogueTrigger : MonoBehaviour
 {
     public Dialogue dialogue;
 
+    public bool inRange;
+    public bool playing = false;
+    private bool actionComplete = false;
+
+    private void Update()
+    {
+        if (inRange == true && Input.GetKeyDown(KeyCode.E) && playing == false)
+        {
+            if (actionComplete == false)
+            {
+                TriggerDialogue();
+                playing = true;
+                actionComplete = true;
+            }
+        }
+
+        if (inRange == true && Input.GetKeyDown(KeyCode.E) && playing == true)
+        {
+            if (actionComplete == false)
+            {
+                playing = false;
+                actionComplete = true;
+            }
+        }
+
+        actionComplete = false;
+
+        if (playing == true && inRange == false)
+        {
+            playing = false;
+            EndDialogue();
+        }
+    }
 
     public void TriggerDialogue()
     {
         FindObjectOfType<DialogueManager>().StartDialogue(dialogue);
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    public void EndDialogue()
     {
-        PlayerController controller = other.GetComponent<PlayerController>();
+        FindObjectOfType<DialogueManager>().EndDialogue();
+    }
 
-        if (controller != null) // Checks to see if you're not an Enemy
+    private void OnTriggerStay2D(Collider2D plyr)
+    {
+        if (plyr.tag == "Player")
         {
-            TriggerDialogue();
+            inRange = true;
+        }
+    }
 
+    private void OnTriggerExit2D(Collider2D plyr)
+    {
+        if (plyr.tag == "Player")
+        {
+            inRange = false;
         }
     }
 

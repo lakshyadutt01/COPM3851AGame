@@ -12,6 +12,8 @@ public class EnemyController : MonoBehaviour
     private Transform player;
     private float distance;
     public float aggroRange;
+    public float stopSwitching;
+    bool facingRight;
 
     public Animator animator;
 
@@ -36,11 +38,15 @@ public class EnemyController : MonoBehaviour
 
         if (distance <= aggroRange)
         {
-            Speed = 0;
-            animator.SetBool("Defense", true);
-            //Vector2 direction = player.position - transform.position;
-            //float angle = Mathf.Atan(direction.x) * Mathf.Rad2Deg;
-            //rigidbody2d.rotation = angle;
+            if (distance >= stopSwitching)
+            {
+                Speed = 0;
+                animator.SetBool("Defense", true);
+                if (player.position.x > transform.position.x && !facingRight) //if the target is to the right of enemy and the enemy is not facing right
+                    Flip();
+                if (player.position.x < transform.position.x && facingRight)
+                    Flip();
+            }
         }
 
         if (distance >= aggroRange)
@@ -70,5 +76,13 @@ public class EnemyController : MonoBehaviour
             player.ChangeHealth(-enemyDamage);
         }
     }
-    
+
+    void Flip()
+    {
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+        facingRight = !facingRight;
+    }
+
 }

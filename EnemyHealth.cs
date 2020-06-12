@@ -7,14 +7,14 @@ public class EnemyHealth : MonoBehaviour
 
     public int health;
     public GameObject damageSound;
-    //public Animator animator;
+    public AnimationClip Death;
+    public Animator animator;
 
     private void Update()
     {
         if (health <= 0)
         {
-            //animator.SetBool("IsDead", true);
-            Destroy(gameObject);
+            Dead();
         }
     }
 
@@ -23,6 +23,13 @@ public class EnemyHealth : MonoBehaviour
         damageSound.GetComponent<AudioSource>().Play();
         health -= damage;
         Debug.Log("damage TAKEN");
+    }
+
+    public void Dead()
+    {
+        //GetComponent<Animation>().Play(animDie.name);
+        animator.SetBool("Death", true);
+        Destroy(this.gameObject, Death.length);
     }
 
 }

@@ -10,7 +10,7 @@ public class LaserGate : MonoBehaviour
     public bool on = false;
     public bool inRange;
     private bool actionComplete = false;
-    //public AudioSource leverSound;
+    public AudioSource leverSound;
 
     private void Start()
     {
@@ -26,7 +26,7 @@ public class LaserGate : MonoBehaviour
             {
                 leverAnimator.SetBool("On", true);
                 laserAnimator.SetBool("Open", true);
-                //leverSound.Play();
+                leverSound.Play();
                 on = true;
                 Laser.GetComponent<BoxCollider2D>().enabled = false;
                 actionComplete = true;
@@ -42,6 +42,7 @@ public class LaserGate : MonoBehaviour
                 on = false;
                 Laser.GetComponent<BoxCollider2D>().enabled = true;
                 actionComplete = true;
+                leverSound.Play();
             }
         }
 

@@ -11,9 +11,7 @@ public class PlayerController : MonoBehaviour
     private BoxCollider2D boxCollider2d;
     private Renderer playerSprite;
     public Animator animator;
-
-    //public Canvas gameoverScreen;
-    //public Button restart;
+    public Gameover Gameover;
 
     public int maxHealth = 3;
     public int currentHealth;
@@ -21,6 +19,7 @@ public class PlayerController : MonoBehaviour
     public GameObject Heart1, Heart2, Heart3, EmptyHeart1, EmptyHeart2, EmptyHeart3;
     public AudioSource playerHit;
     public AudioSource lowHealth;
+    public AudioSource deathSound;
     private float timeBtwLowHealth;
     public float startTimeBtwLowHealth;
     public float timeInvincible;
@@ -37,6 +36,8 @@ public class PlayerController : MonoBehaviour
     private int direction;
     private int extraDash;
     public int extraDashValue;
+    public int dash { get { return extraDashValue; } }
+    public int maxDashs = 5;
     public AudioSource dashSound;
     public AudioClip[] dashSoundsCollection;
 
@@ -51,24 +52,30 @@ public class PlayerController : MonoBehaviour
     public LayerMask whatIsWall;
     private int extraWallJump;
     public int extraWallJumpValue;
+    public int wall { get { return extraWallJumpValue; } }
+    public int maxWallJumps = 5;
+    public AudioSource wallJumpSound;
 
+    public int maxJumps = 5;
     private int extraJumps;
     public int extraJumpsValue;
+    public int jump { get { return extraJumpsValue; } }
     public AudioSource jumpSound;
     public AudioClip[] jumpSoundsCollection;
+    public AudioSource doubleJumpSound;
+    public AudioClip[] doubleJumpSoundsCollection;
 
     void Start()
     {
-
+        animator = GetComponent<Animator>();
         rigidbody2d = transform.GetComponent<Rigidbody2D>();
         boxCollider2d = transform.GetComponent<BoxCollider2D>();
         playerSprite = GetComponent<Renderer>();
 
-        //gameoverScreen = gameoverScreen.GetComponent<Canvas>();
-        //restart = restart.GetComponent<Button>();
-        //gameoverScreen.enabled = false;
-
         currentHealth = PlayerPrefs.GetInt("CurrentHealth");
+        extraJumpsValue = PlayerPrefs.GetInt("ExtraJumpsValue");
+        extraDashValue = PlayerPrefs.GetInt("ExtraDashValue");
+        extraWallJumpValue = PlayerPrefs.GetInt("ExtraWallJumpValue");
         EmptyHeart1.gameObject.SetActive(false);
         EmptyHeart2.gameObject.SetActive(false);
         EmptyHeart3.gameObject.SetActive(false);
@@ -76,6 +83,7 @@ public class PlayerController : MonoBehaviour
         extraJumps = extraJumpsValue;
         extraWallJump = extraWallJumpValue;
         jumpSound = GetComponent<AudioSource>();
+        doubleJumpSound = GetComponent<AudioSource>();
 
         extraDash = extraDashValue;
         dashTime = startDashTime;
@@ -192,23 +200,25 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && extraJumps > 0 | isWalled == true)
         {
-            jumpSound.clip = jumpSoundsCollection[Random.Range(0, jumpSoundsCollection.Length)];
-            jumpSound.PlayOneShot(jumpSound.clip);
             if (isWalled == true && extraWallJump > 0)
             {
                 rigidbody2d.velocity = Vector2.up * jumpVelocity;
                 extraWallJump--;
+                wallJumpSound.Play();
             }
-            else if (isWalled == false | extraJumps > 0)
+            else if (isWalled == false | extraJumps > 0 && isGrounded == false)
             {
+                doubleJumpSound.clip = doubleJumpSoundsCollection[Random.Range(0, doubleJumpSoundsCollection.Length)];
                 rigidbody2d.velocity = Vector2.up * jumpVelocity;
-                //jumpSound.Play();
                 extraJumps--;
+                doubleJumpSound.PlayOneShot(doubleJumpSound.clip);
             }
         }
-        else if(Input.GetKeyDown(KeyCode.Space) && extraJumps == 0 && isGrounded == true)
+        if(Input.GetKeyDown(KeyCode.Space) && isGrounded == true)
         {
+            jumpSound.clip = jumpSoundsCollection[Random.Range(0, jumpSoundsCollection.Length)];
             rigidbody2d.velocity = Vector2.up * jumpVelocity;
+            jumpSound.PlayOneShot(jumpSound.clip);
         }
 
         if (currentHealth == 1 && timeBtwLowHealth <= 0)
@@ -238,14 +248,28 @@ public class PlayerController : MonoBehaviour
             {
                 rigidbody2d.velocity = new Vector2(+moveSpeed, rigidbody2d.velocity.y);
                 movingLeft = 1;
+                
             }
             // Just like before, except you moved right
             else
             {
+                animator.SetBool("Running", false);
                 rigidbody2d.velocity = new Vector2(0, rigidbody2d.velocity.y);
                 movingLeft = 0;
             }
             // This is in case theres no input so nothing moves
+        }
+        if(movingLeft == 1 || movingLeft == -1)
+        {
+            animator.SetBool("Running", true);
+        }
+        if(movingLeft == 1)
+        {
+            transform.eulerAngles = new Vector3(0, 180, 0);
+        }
+        if (movingLeft == -1)
+        {
+            transform.eulerAngles = new Vector3(0, 0, 0);
         }
     }
 
@@ -265,22 +289,41 @@ public class PlayerController : MonoBehaviour
 
             isInvincible = true; //sets you to invincible
             invincibleTimer = timeInvincible; //gives you the timer of invincible
+            playerHit.GetComponent<AudioSource>().Play();
         }
 
             currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth); //Does the math to calculate the Health
 
             PlayerPrefs.SetInt("CurrentHealth", currentHealth);
             Debug.Log(currentHealth + "/" + maxHealth);
-            playerHit.GetComponent<AudioSource>().Play();
 
             if (currentHealth == 0)
             {
+                deathSound.Play();
                 playerSprite.enabled = false;
                 Destroy(rigidbody2d);
                 boxCollider2d.enabled = false;
-                //gameoverScreen.enabled = true;
+                Gameover.DeathMenu();
             }
         
 
+    }
+
+    public void ChangeJump(int amount)
+    {
+        extraJumpsValue = Mathf.Clamp(extraJumpsValue + amount, 0, maxJumps);
+        PlayerPrefs.SetInt("ExtraJumpsValue", extraJumpsValue);
+    }
+
+    public void ChangeDash(int amount)
+    {
+        extraDashValue = Mathf.Clamp(extraDashValue + amount, 0, maxDashs);
+        PlayerPrefs.SetInt("ExtraDashValue", extraDashValue);
+    }
+
+    public void ChangeWall(int amount)
+    {
+        extraWallJumpValue = Mathf.Clamp(extraWallJumpValue + amount, 0, maxWallJumps);
+        PlayerPrefs.SetInt("ExtraWallJumpValue", extraWallJumpValue);
     }
 }

@@ -6,32 +6,27 @@ using UnityEngine.SceneManagement;
 
 public class Gameover : MonoBehaviour
 {
-    public Canvas gameoverScreen;
-    public Button restart;
+    public static bool GameIsOver = false;
+
+    public GameObject GameoverMenuUI;
 
 
-
-    void Start()
-    {
-        gameoverScreen = gameoverScreen.GetComponent<Canvas>();
-        restart = restart.GetComponent<Button>();
-        gameoverScreen.enabled = false;
-
-    }
 
     void Update()
     {
-        PlayerController controller = GetComponent<PlayerController>();
 
-        if (controller.currentHealth <= 0)
-        {
-            gameoverScreen.enabled = true;
-        }
+    }
+
+    public void DeathMenu()
+    {
+        GameoverMenuUI.SetActive(true);
+        Time.timeScale = 0f;
+        GameIsOver = true;
     }
 
     public void Restart()
     {
-        Debug.Log("wow howq buggy lmao");
+        Time.timeScale = 1f;
         SceneManager.LoadScene(0);
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class JumpCollectible : MonoBehaviour
 {
+    public AudioSource collectible;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -11,7 +12,8 @@ public class JumpCollectible : MonoBehaviour
 
         if (controller != null) // Checks to see if you're not an Enemy
         {
-            controller.extraJumpsValue++; //Gives you +1 Jump
+            controller.ChangeJump(1); //Gives you +1 Jump
+            collectible.Play();
             Destroy(gameObject); // Then Destroys itself
 
         }

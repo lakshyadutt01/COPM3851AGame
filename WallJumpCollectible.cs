@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DashCollectible : MonoBehaviour
+public class WallJumpCollectible : MonoBehaviour
 {
     public AudioSource collectible;
 
@@ -12,7 +12,7 @@ public class DashCollectible : MonoBehaviour
 
         if (controller != null) // Checks to see if you're not an Enemy
         {
-            controller.ChangeDash(1); //Gives you +1 Dash
+            controller.ChangeWall(1); //Gives you +1 WallJump
             collectible.Play();
             Destroy(gameObject); // Then Destroys itself
 

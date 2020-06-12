@@ -7,9 +7,13 @@ public class DialogueManager : MonoBehaviour
 {
     public Text nameText;
     public Text dialogueText;
+    public float delay;
     public Animator animator;
+    public Animator bookAnimator;
 
     private Queue<string> sentences;
+    public GameObject journalUI;
+    public AudioSource bookSound;
 
 
     void Start()
@@ -21,6 +25,9 @@ public class DialogueManager : MonoBehaviour
     public void StartDialogue (Dialogue dialogue)
     {
         animator.SetBool("IsOpen", true);
+        bookAnimator.SetBool("IsOpen", true);
+        bookSound.Play();
+        journalUI.SetActive(true);
 
         nameText.text = dialogue.name;
         sentences.Clear();
@@ -35,8 +42,6 @@ public class DialogueManager : MonoBehaviour
 
     public void DisplayNextSentence()
     {
-        //if (Input.GetKeyDown(KeyCode.KeypadEnter))
-        //{
             if (sentences.Count == 0)
             {
                 EndDialogue();
@@ -46,7 +51,6 @@ public class DialogueManager : MonoBehaviour
             string sentence = sentences.Dequeue();
             StopAllCoroutines();
             StartCoroutine(TypeSentence(sentence));
-        //}
     }
 
     IEnumerator TypeSentence (string sentence)
@@ -55,12 +59,14 @@ public class DialogueManager : MonoBehaviour
         foreach (char letter in sentence.ToCharArray())
         {
             dialogueText.text += letter;
-            yield return null;
+            yield return new WaitForSeconds(delay);
         }
     }
 
-    void EndDialogue()
+    public void EndDialogue()
     {
+        journalUI.SetActive(false);
         animator.SetBool("IsOpen", false);
+        bookAnimator.SetBool("IsOpen", false);
     }
 }

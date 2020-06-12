@@ -13,6 +13,7 @@ public class ProjectileEnemy : MonoBehaviour
     private float distance;
     public float aggroRange;
     public float stopShooting;
+    bool facingRight;
     public AudioSource alertStart;
     public AudioSource alertEnd;
 
@@ -47,8 +48,12 @@ public class ProjectileEnemy : MonoBehaviour
         if (distance <= aggroRange)
         {
             Speed = 0;
+            alertStart.GetComponent<AudioSource>().Play();
             animator.SetBool("IsAlert", true);
-            //alertStart.GetComponent<AudioSource>().Play();
+            if (player.position.x > transform.position.x && !facingRight) //if the target is to the right of enemy and the enemy is not facing right
+                Flip();
+            if (player.position.x < transform.position.x && facingRight)
+                Flip();
 
             if (distance >= stopShooting)
             {
@@ -82,6 +87,14 @@ public class ProjectileEnemy : MonoBehaviour
     private void OnTriggerExit2D(Collider2D collision)
     {
         transform.localScale = new Vector2(-(Mathf.Sign(rigidbody2d.velocity.x)), transform.localScale.y);
+    }
+
+    void Flip()
+    {
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+        facingRight = !facingRight;
     }
 
 }
